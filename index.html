@@ -3,79 +3,50 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>CloudCreate Debug</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CloudCreate via Pipedream</title>
   <style>
-    body { font-family: sans-serif; background: #f7f7f7; padding: 2rem; }
-    input, button { padding: 0.6rem; font-size: 1rem; width: 100%; margin-bottom: 1rem; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 2rem; text-align: center; }
+    input, button { padding: 0.6rem; font-size: 1rem; width: 100%; max-width: 400px; margin-bottom: 1rem; }
     img { max-width: 100%; margin-top: 1rem; border-radius: 8px; }
-    textarea { width: 100%; height: 150px; font-family: monospace; font-size: 0.9rem; }
+    #status { margin-top: 1rem; font-style: italic; }
   </style>
 </head>
 <body>
-  <h2>🧪 CloudCreate Debug Mode</h2>
-  <input id="prompt" placeholder="Type your prompt..." value="A luxury hotel lobby with modern design" />
+  <h2>CloudCreate AI Image Generator</h2>
+  <input type="text" id="prompt" placeholder="Type your prompt..." />
   <button onclick="generate()">Generate Image</button>
-  <p id="status">Waiting...</p>
-  <img id="result" />
-  <h3>Debug Log:</h3>
-  <textarea id="log" readonly></textarea>
+  <p id="status">Waiting for prompt...</p>
+  <img id="result" src="" alt="" />
 
   <script>
-    const status = document.getElementById("status");
-    const log = document.getElementById("log");
-    const result = document.getElementById("result");
-    const token = "r8_TZhyNvUVnXB3VCGiYKg4n7OO9H5Wt504S90KA";
-
     async function generate() {
       const prompt = document.getElementById("prompt").value;
-      status.textContent = "🟡 Sending request...";
-      result.src = "";
-      log.value = "";
+      const status = document.getElementById("status");
+      const img = document.getElementById("result");
+      status.textContent = "⏳ Sending to Pipedream...";
+      img.src = "";
 
       try {
-        const predictionRes = await fetch("https://api.replicate.com/v1/predictions", {
+        const res = await fetch("https://eowa60nk1010xyg.m.pipedream.net", {
           method: "POST",
           headers: {
-            Authorization: `Token ${token}`,
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({
-            version: "c508d555f95b44258d8fe204f6c4c86c4e37b6cb2cfadd9e123a6cd5b731b204",
-            input: { prompt }
-          })
+          body: JSON.stringify({ prompt })
         });
 
-        const prediction = await predictionRes.json();
-        log.value += "[CREATE RESPONSE]\n" + JSON.stringify(prediction, null, 2) + "\n\n";
-
-        if (!prediction.urls || !prediction.id) {
-          status.textContent = "❌ Failed to start generation.";
-          return;
-        }
-
-        const getUrl = prediction.urls.get;
-        status.textContent = "⏳ Waiting for image...";
-
-        let pollResult = null;
-        while (!pollResult) {
-          await new Promise(r => setTimeout(r, 3000));
-          const res = await fetch(getUrl, {
-            headers: { Authorization: `Token ${token}` }
-          });
-          const data = await res.json();
-          log.value += "[POLL]\n" + JSON.stringify(data, null, 2) + "\n\n";
-          if (data.status === "succeeded") {
-            pollResult = data.output[0];
-            result.src = pollResult;
-            status.textContent = "✅ Image ready.";
-          } else if (data.status === "failed") {
-            status.textContent = "❌ Generation failed.";
-            break;
-          }
+        const data = await res.json();
+        if (data.image_url) {
+          status.textContent = "✅ Image generated!";
+          img.src = data.image_url;
+        } else {
+          status.textContent = "⚠️ Failed to receive image.";
+          console.error(data);
         }
       } catch (err) {
         status.textContent = "❌ Error: " + err.message;
-        log.value += "ERROR: " + err.stack;
+        console.error(err);
       }
     }
   </script>
