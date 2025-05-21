@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CloudCreate – AI Image Generator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f3f4f6;
+      padding: 2rem;
+      text-align: center;
+    }
+    input, button {
+      padding: 0.6rem;
+      font-size: 1rem;
+      margin: 0.5rem;
+    }
+    img {
+      max-width: 100%;
+      margin-top: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>CloudCreate</h1>
+  <p>Generate images with AI using Replicate</p>
+  <input id="prompt" type="text" placeholder="Describe your image" />
+  <button onclick="generate()">Generate</button>
+  <p id="status"></p>
+  <img id="result" src="" alt="Generated image" />
+
+  <script>
+    async function generate() {
+      const prompt = document.getElementById('prompt').value;
+      document.getElementById('status').innerText = '⏳ Generating...';
+      document.getElementById('result').src = '';
+
+      const response = await fetch('https://eowa60nk1010xyg.m.pipedream.net', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+
+      const result = await response.json();
+      if (result && result.image_url) {
+        document.getElementById('result').src = result.image_url;
+        document.getElementById('status').innerText = '✅ Done';
+      } else {
+        document.getElementById('status').innerText = '⚠️ Failed to generate image';
+        console.error(result);
+      }
+    }
+  </script>
+</body>
+</html>
