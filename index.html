@@ -1,46 +1,98 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CloudCreate - AI Image Generator</title>
+  <title>CloudCreate AI Image Generator</title>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 40px; background: #f5f5f5; }
-    h1 { color: #1D55CC; }
-    input, button { padding: 10px; margin: 10px; width: 80%; max-width: 500px; font-size: 16px; }
-    img { margin-top: 20px; max-width: 90%; height: auto; border: 1px solid #ccc; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+      background-color: #f8f9fa;
+    }
+    h1 {
+      text-align: center;
+      color: #1d55cc;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      font-size: 16px;
+      padding: 10px;
+      margin-bottom: 1rem;
+    }
+    button {
+      background-color: #1d55cc;
+      color: white;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #ccc;
+    }
+    .preview {
+      margin-top: 2rem;
+      text-align: center;
+    }
+    .preview img {
+      max-width: 100%;
+      border: 1px solid #ddd;
+      margin-top: 10px;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+      margin-top: 1rem;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <h1>CloudCreate - AI Image Generator</h1>
-  <input id="prompt" type="text" placeholder="Describe the image you want to generate..." />
-  <br/>
-  <button onclick="generate()">Generate</button>
-  <p id="status"></p>
-  <img id="result" src="" alt="" />
+  <h1>CloudCreate AI</h1>
+  <textarea id="prompt" placeholder="Type your image prompt here..."></textarea>
+  <button onclick="generate()">Generate Image</button>
+
+  <div class="preview" id="preview"></div>
+  <div class="error" id="error"></div>
+
   <script>
     async function generate() {
-      const prompt = document.getElementById('prompt').value;
-      const status = document.getElementById('status');
-      const img = document.getElementById('result');
-      status.innerText = 'Generating...';
-      img.src = '';
+      const prompt = document.getElementById("prompt").value.trim();
+      const preview = document.getElementById("preview");
+      const error = document.getElementById("error");
+      preview.innerHTML = '';
+      error.innerText = '';
+
+      if (!prompt) {
+        error.innerText = 'Please enter a prompt.';
+        return;
+      }
+
+      preview.innerHTML = '<p><b>Generating...</b></p>';
+
       try {
-        const res = await fetch('https://eowa60nk1010xyg.m.pipedream.net', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("https://eowa60nk1010xyg.m.pipedream.net", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify({ prompt })
         });
+
         const data = await res.json();
-        if (data && data.image_url) {
-          img.src = data.image_url;
-          status.innerText = '✅ Done!';
+
+        if (data.image) {
+          preview.innerHTML = `<p><b>Result:</b></p><img src="${data.image}" alt="Generated Image">`;
         } else {
-          status.innerText = '⚠️ Failed to generate image.';
+          throw new Error("No image returned.");
         }
       } catch (err) {
-        status.innerText = '❌ Error: ' + err.message;
+        error.innerText = "❌ Error: " + err.message;
+        preview.innerHTML = '';
       }
     }
   </script>
